@@ -20,13 +20,14 @@ namespace AnnouncementAPI.Controllers
 
         //HTTP GET method to fetch records from the database
         [HttpGet("/getAnnouncement")]
-        public IActionResult GetAnnouncements()
+        public Response<List<GetAnnouncement>> GetAnnouncements()
         {
             try
             {
                 using (SqlConnection connection = GetSqlConnection(DatabaseName.dbName)) //establishing connection to the database
                 {
                     var announcements = new List<GetAnnouncement>(); //list to store Announcement records
+                    
 
                     using (SqlCommand command = new SqlCommand(StoredProcedure.getAnnouncement, connection)) //creating a new SQL command object using the stored procedure name and the connection object
                     {
@@ -51,23 +52,40 @@ namespace AnnouncementAPI.Controllers
                             }
                         }
                     }
+                    var response = new Response<List<GetAnnouncement>>()
+                    {
+                        StatusCode = 200, 
+                        StatusMessage = "Success",
+                        CorrelationId = Guid.NewGuid(),
+                        Data = announcements
 
+                    };
 
-                    return Ok(announcements); //returning the list of announcements as an HTTP response with status code 200 (OK)
+                    return response; //returning the response with list of announcements as an HTTP response with status code 200 (OK)
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex.Message); //logging the error message using Serilog
                 Log.Error(ex.ToString()); //logging the error message using Serilog
-                return StatusCode(500); //returning an HTTP response with status code 500 (Internal Server Error)
+
+                var response = new Response<List<GetAnnouncement>>()
+                {
+                    StatusCode = 500,
+                    StatusMessage = "Internal Server Error",
+                    CorrelationId = new Guid(),
+                    Data = null,
+                    ErrorMessage = ex.Message
+
+                };
+                return response; //returning an HTTP response with status code 500 (Internal Server Error)
             }
         }
 
 
         //HTTP POST method to save announcement records to the database
         [HttpPost("/saveAnnouncement")]
-        public IActionResult SaveAnnouncement(Announcement announcement, string actionPerformed)
+        public Response<Announcement> SaveAnnouncement(Announcement announcement, string actionPerformed)
         {
             try
             {
@@ -88,18 +106,50 @@ namespace AnnouncementAPI.Controllers
                         int i = command.ExecuteNonQuery(); //executing the command and getting the number of affected rows
 
                         if (i >= 1) //if at least one row is affected
-                            return Ok("Announcement " + actionPerformed + " action Performed Successfully."); //returning an HTTP response with status code 200 (OK) and a success message
+                        {
+                            var response = new Response<Announcement>()
+                            {
+                                StatusCode = 200,
+                                StatusMessage = "Success",
+                                CorrelationId = Guid.NewGuid(),
+                                Data = null
+
+                            };
+
+                            return response;
+                        } //returning an HTTP response with status code 200 (OK) and a success message
                         else
                         {
-                            return BadRequest("Action Failed"); //returning an HTTP response with status code 400 (Bad Request) and an error message
+                            var response = new Response<Announcement>()
+                            {
+                                StatusCode = 400,
+                                StatusMessage = "Bad Request",
+                                CorrelationId = Guid.NewGuid(),
+                                Data = null,
+                                ErrorMessage = "No Affected Queries"
+
+                            };//returning an HTTP response with status code 400 (Bad Request) and an error message
+
+                            return response;
                         }
+
+                        
                     }
                 }
             }
             catch (Exception ex)
             {
                 Log.Error(ex.Message); //logging the error message using Serilog
-                return StatusCode(500); //returning an HTTP response with status code 500 (Internal Server Error)
+                var response = new Response<Announcement>()
+                {
+                    StatusCode = 500,
+                    StatusMessage = "Internal Server Error",
+                    CorrelationId = new Guid(),
+                    Data = null,
+                    ErrorMessage = ex.Message
+
+                };
+                return response; //returning an HTTP response with status code 500 (Internal Server Error)
             }
         }
     }
