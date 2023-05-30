@@ -1,12 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using LoggingDemo.Controllers;
+﻿using Microsoft.AspNetCore.Mvc;
 using Serilog;
-using System.Xml.Linq;
 using System.Data.SqlClient;
 using AnnouncementAPI.Models;
 using System.Data;
 using LPL.LoggingDemo.Controllers;
+using AnnouncementAPI.Common.Constants;
 
 namespace LPL.AnnouncementAPI.Controllers
 {
@@ -14,26 +12,21 @@ namespace LPL.AnnouncementAPI.Controllers
     [ApiController]
     public class UserController : BaseController
     {
-        private readonly string dbName = "OneLPL"; //database name
-        private readonly string getStoreProc = "spGET"; //name of the stored procedure to fetch records
-        private readonly string saveStoreProc = "spSAVE"; //name of the stored procedure to save records
-
         public UserController() : base()
         {
-
         }
 
         //HTTP GET method to fetch records from the database
         [HttpGet("/get")]
-        public IActionResult GetRecords()
+        public IActionResult GetUsers()
         {
             try
             {
-                using (SqlConnection connection = GetSqlConnection(dbName)) //establishing connection to the database
+                using (SqlConnection connection = GetSqlConnection(DatabaseName.dbName)) //establishing connection to the database
                 {
                     var users = new List<User>(); //list to store user records
 
-                    using (SqlCommand command = new SqlCommand(getStoreProc, connection)) //creating a new SQL command object using the stored procedure name and the connection object
+                    using (SqlCommand command = new SqlCommand(StoredProcedure.getUser, connection)) //creating a new SQL command object using the stored procedure name and the connection object
                     {
                         command.CommandType = CommandType.StoredProcedure; //setting the command type to stored procedure
 
@@ -46,7 +39,7 @@ namespace LPL.AnnouncementAPI.Controllers
                                     UserId = Convert.ToInt32(reader["UserID"]),
                                     Name = reader["Name"].ToString(),
                                     Email = reader["Email"].ToString(),
-                                    PhNo = Convert.ToInt64(reader["PhnNo"]),
+                                    PhNo = reader["PhNo"].ToString(),
                                     Address = reader["Address"].ToString()
 
                                 });
@@ -69,20 +62,20 @@ namespace LPL.AnnouncementAPI.Controllers
 
         //HTTP POST method to save user records to the database
         [HttpPost("/save")]
-        public IActionResult PostRecords(User user, string actionPerformed)
+        public IActionResult SaveUser(User user, string actionPerformed)
         {
             try
             {
-                using (SqlConnection connection = GetSqlConnection(dbName)) //establishing connection to the database
+                using (SqlConnection connection = GetSqlConnection(DatabaseName.dbName)) //establishing connection to the database
                 {
 
-                    using (SqlCommand command = new SqlCommand(saveStoreProc, connection)) //creating a new SQL command object using the stored procedure name and the connectionobject
+                    using (SqlCommand command = new SqlCommand(StoredProcedure.saveUser, connection)) //creating a new SQL command object using the stored procedure name and the connectionobject
                     {
                         command.CommandType = CommandType.StoredProcedure; //setting the command type to stored procedure
                         command.Parameters.AddWithValue("@UserID", user.UserId); //adding parameters to the command object
                         command.Parameters.AddWithValue("@Name", user.Name);
                         command.Parameters.AddWithValue("@Email", user.Email);
-                        command.Parameters.AddWithValue("@PhnNo", user.PhNo);
+                        command.Parameters.AddWithValue("@PhNo", user.PhNo);
                         command.Parameters.AddWithValue("@Address", user.Address);
                         command.Parameters.AddWithValue("@Action", actionPerformed);
 
