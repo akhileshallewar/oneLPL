@@ -47,7 +47,6 @@ namespace AnnouncementAPI.Controllers
                                     Descriptions = reader["Descriptions"].ToString(),
                                     CreatedDate = Convert.ToDateTime(reader["CreatedDate"].ToString())
 
-
                                 });
                             }
                         }

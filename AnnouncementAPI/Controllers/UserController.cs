@@ -17,7 +17,7 @@ namespace LPL.AnnouncementAPI.Controllers
         }
 
         //HTTP GET method to fetch records from the database
-        [HttpGet("/get")]
+        [HttpGet("/getUser")]
         public IActionResult GetUsers()
         {
             try
@@ -61,7 +61,7 @@ namespace LPL.AnnouncementAPI.Controllers
 
 
         //HTTP POST method to save user records to the database
-        [HttpPost("/save")]
+        [HttpPost("/saveUser")]
         public IActionResult SaveUser(User user, string actionPerformed)
         {
             try
